@@ -1,4 +1,4 @@
-package newtelemetry
+package telemetry
 
 // OperationIDKey represents the key type for the operation ID in context
 type OperationIDKey string

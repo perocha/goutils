@@ -1,4 +1,4 @@
-package newtelemetry
+package telemetry
 
 import (
 	"context"
