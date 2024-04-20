@@ -11,13 +11,10 @@ import (
 	"github.com/microsoft/ApplicationInsights-Go/appinsights/contracts"
 )
 
-const (
-	SERVICE_NAME = "Producer"
-)
-
 // Telemetry defines the telemetry client
 type Telemetry struct {
-	client appinsights.TelemetryClient
+	client      appinsights.TelemetryClient
+	serviceName string
 }
 
 // SeverityLevel defines the telemetry severity level
@@ -44,7 +41,10 @@ func Initialize(instrumentationKey string, serviceName string) (*Telemetry, erro
 	// Set the role name
 	client.Context().Tags.Cloud().SetRole(serviceName)
 
-	return &Telemetry{client: client}, nil
+	return &Telemetry{
+		client:      client,
+		serviceName: serviceName,
+	}, nil
 }
 
 // TrackTrace sends a trace telemetry event
@@ -55,7 +55,7 @@ func (t *Telemetry) TrackTrace(ctx context.Context, message string, severity Sev
 	}
 
 	// Create the log message
-	txtMessage := fmt.Sprintf("%s::%s", SERVICE_NAME, message)
+	txtMessage := fmt.Sprintf("%s::%s", t.serviceName, message)
 	// Retrieve the operationID from the context and add it to the log message
 	operationID, ok := ctx.Value(OperationIDKeyContextKey).(string)
 	if ok && operationID != "" {
@@ -94,7 +94,7 @@ func (t *Telemetry) TrackException(ctx context.Context, message string, err erro
 	}
 
 	// Create the log message
-	txtMessage := fmt.Sprintf("%s::%s", SERVICE_NAME, message)
+	txtMessage := fmt.Sprintf("%s::%s", t.serviceName, message)
 	// Retrieve the operationID from the context and add it to the log message
 	operationID, ok := ctx.Value(OperationIDKeyContextKey).(string)
 	if ok && operationID != "" {
@@ -133,7 +133,7 @@ func (t *Telemetry) TrackRequest(ctx context.Context, method string, url string,
 	}
 
 	// Create the log message
-	consoleMessage := fmt.Sprintf("%s::Method=%s::URL=%s", SERVICE_NAME, method, url)
+	consoleMessage := fmt.Sprintf("%s::Method=%s::URL=%s", t.serviceName, method, url)
 	if len(properties) > 0 {
 		consoleMessage = fmt.Sprintf("%s::Properties=%v", consoleMessage, properties)
 	}
@@ -164,7 +164,7 @@ func (t *Telemetry) TrackDependency(ctx context.Context, dependencyData string, 
 	}
 
 	// Create the log message
-	txtMessage := fmt.Sprintf("%s::%s::%s", SERVICE_NAME, dependencyData, dependencyName)
+	txtMessage := fmt.Sprintf("%s::%s::%s", t.serviceName, dependencyData, dependencyName)
 	consoleMessage := txtMessage
 	if len(properties) > 0 {
 		consoleMessage = fmt.Sprintf("%s::Properties=%v", consoleMessage, properties)
