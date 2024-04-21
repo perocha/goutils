@@ -71,3 +71,12 @@ func (cfg *Config) GetVar(key string) (string, error) {
 
 	return *resp.Value, nil
 }
+
+// Get configuration value from key, return empty string if not found
+func (cfg *Config) GetVarOrDefault(key string, defaultValue string) string {
+	value, err := cfg.GetVar(key)
+	if err != nil {
+		return defaultValue
+	}
+	return value
+}

@@ -5,6 +5,7 @@ go 1.22.2
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/data/azappconfig v1.1.0
 	github.com/microsoft/ApplicationInsights-Go v0.4.4
+	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
@@ -14,5 +15,4 @@ require (
 	github.com/gofrs/uuid v3.3.0+incompatible // indirect
 	golang.org/x/net v0.19.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
