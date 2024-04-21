@@ -14,8 +14,8 @@ type yamlConfig struct {
 }
 
 type Config struct {
-	AppInsightsInstrumentationKey string
-	Client                        *azappconfig.Client
+	AppConfigurationConnectionString string
+	Client                           *azappconfig.Client
 }
 
 // New configuration client from connection string
@@ -25,7 +25,8 @@ func NewConfigFromConnectionString(connectionString string) (*Config, error) {
 		return nil, err
 	}
 	return &Config{
-		Client: client,
+		Client:                           client,
+		AppConfigurationConnectionString: connectionString,
 	}, nil
 }
 
@@ -54,6 +55,7 @@ func NewConfigFromFile(configFile string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+	cfg.AppConfigurationConnectionString = connectionString
 
 	return cfg, nil
 }
