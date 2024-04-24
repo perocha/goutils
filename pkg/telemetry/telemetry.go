@@ -165,6 +165,12 @@ func (t *Telemetry) TrackDependency(ctx context.Context, dependencyData string, 
 
 	// Create the log message
 	txtMessage := fmt.Sprintf("%s::%s::%s", t.serviceName, dependencyData, dependencyName)
+	// Retrieve the operationID from the context and add it to the log message
+	operationID, ok := ctx.Value(OperationIDKeyContextKey).(string)
+	if ok && operationID != "" {
+		// Add operationID to the console message
+		txtMessage = fmt.Sprintf("%s::OperationID=%s", txtMessage, operationID)
+	}
 	consoleMessage := txtMessage
 	if len(properties) > 0 {
 		consoleMessage = fmt.Sprintf("%s::Properties=%v", consoleMessage, properties)
@@ -184,12 +190,9 @@ func (t *Telemetry) TrackDependency(ctx context.Context, dependencyData string, 
 		dependency.Properties[k] = v
 	}
 
-	// Get the operationID from the context
-	if operationID, ok := ctx.Value(OperationIDKeyContextKey).(string); ok {
-		// Set parent id
-		if operationID != "" {
-			dependency.Tags.Operation().SetParentId(operationID)
-		}
+	// Set parent id
+	if operationID != "" {
+		dependency.Tags.Operation().SetParentId(operationID)
 	}
 
 	// Send the dependency to App Insights
