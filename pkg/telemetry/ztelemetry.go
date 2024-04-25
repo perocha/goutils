@@ -17,7 +17,7 @@ type ZField struct {
 
 func NewZTelemetry() (*ZTelemetry, error) {
 	// Create a new logger, with the caller skip set to 1 to skip the current frame (since we are in the telemetry package)
-	logger, err := zap.NewProduction(zap.AddCallerSkip(1))
+	logger, err := zap.NewProduction(zap.AddCallerSkip(2))
 	if err != nil {
 		return nil, err
 	}
