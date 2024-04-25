@@ -14,6 +14,7 @@ import (
 // Telemetry defines the telemetry client
 type Telemetry struct {
 	client      appinsights.TelemetryClient
+	ztelemetry  *ZTelemetry
 	serviceName string
 }
 
@@ -41,11 +42,69 @@ func Initialize(instrumentationKey string, serviceName string) (*Telemetry, erro
 	// Set the role name
 	client.Context().Tags.Cloud().SetRole(serviceName)
 
+	// Initialize ZTelemetry
+	ztelemetry, err := NewZTelemetry()
+	if err != nil {
+		return nil, err
+	}
+
 	return &Telemetry{
 		client:      client,
 		serviceName: serviceName,
+		ztelemetry:  ztelemetry,
 	}, nil
 }
+
+// TrackTrace sends a trace telemetry event
+func (t *Telemetry) TrackTrace(ctx context.Context, message string, severity SeverityLevel, properties map[string]string) {
+	// Create tags for ZTelemetry
+	zFields := make([]ZField, 0)
+	operationID, ok := ctx.Value(OperationIDKeyContextKey).(string)
+	if ok && operationID != "" {
+		zFields = append(zFields, String(string(OperationIDKeyContextKey), operationID))
+	}
+
+	// Add service name to tags
+	zFields = append(zFields, String("ServiceName", t.serviceName))
+
+	// Add properties to tags
+	for k, v := range properties {
+		zFields = append(zFields, String(k, v))
+	}
+
+	// Log using ZTelemetry
+	switch severity {
+	case Verbose:
+		t.ztelemetry.Debug(ctx, message, zFields...)
+	case Information:
+		t.ztelemetry.Info(ctx, message, zFields...)
+	case Warning:
+		t.ztelemetry.Warn(ctx, message, zFields...)
+	case Error, Critical:
+		t.ztelemetry.Error(ctx, message, zFields...)
+	default:
+		t.ztelemetry.Info(ctx, message, zFields...)
+	}
+
+	// Append the service name to App Insights message
+	txtMessage := fmt.Sprintf("%s::%s", t.serviceName, message)
+
+	// Create the new trace
+	trace := appinsights.NewTraceTelemetry(txtMessage, contracts.SeverityLevel(severity))
+	for k, v := range properties {
+		trace.Properties[k] = v
+	}
+
+	// Set parent id, using the operationID from the context
+	if operationID != "" {
+		trace.Tags.Operation().SetParentId(operationID)
+	}
+
+	// Send the trace to App Insights
+	t.client.Track(trace)
+}
+
+/*
 
 // TrackTrace sends a trace telemetry event
 func (t *Telemetry) TrackTrace(ctx context.Context, message string, severity SeverityLevel, properties map[string]string, logToConsole bool) {
@@ -86,6 +145,7 @@ func (t *Telemetry) TrackTrace(ctx context.Context, message string, severity Sev
 	// Send the trace to App Insights
 	t.client.Track(trace)
 }
+*/
 
 // TrackException sends an exception telemetry event
 func (t *Telemetry) TrackException(ctx context.Context, message string, err error, severity SeverityLevel, properties map[string]string, logToConsole bool) {

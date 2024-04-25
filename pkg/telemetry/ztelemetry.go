@@ -28,6 +28,18 @@ func String(key string, val string) ZField {
 	return ZField{Key: key, Value: val}
 }
 
+// Debug logs a debug message with the given tags
+func (z *ZTelemetry) Debug(ctx context.Context, msg string, tags ...ZField) {
+	fields := make([]zap.Field, len(tags))
+	for i, tag := range tags {
+		fields[i] = zap.String(tag.Key, tag.Value)
+	}
+	operationID, _ := ctx.Value(OperationIDKeyContextKey).(string)
+	fields = append(fields, zap.String(string(OperationIDKeyContextKey), operationID))
+	z.logger.Debug(msg, fields...)
+}
+
+// Info logs an info message with the given tags
 func (z *ZTelemetry) Info(ctx context.Context, msg string, tags ...ZField) {
 	fields := make([]zap.Field, len(tags))
 	for i, tag := range tags {
@@ -38,6 +50,18 @@ func (z *ZTelemetry) Info(ctx context.Context, msg string, tags ...ZField) {
 	z.logger.Info(msg, fields...)
 }
 
+// Warn logs a warning message with the given tags
+func (z *ZTelemetry) Warn(ctx context.Context, msg string, tags ...ZField) {
+	fields := make([]zap.Field, len(tags))
+	for i, tag := range tags {
+		fields[i] = zap.String(tag.Key, tag.Value)
+	}
+	operationID, _ := ctx.Value(OperationIDKeyContextKey).(string)
+	fields = append(fields, zap.String(string(OperationIDKeyContextKey), operationID))
+	z.logger.Warn(msg, fields...)
+}
+
+// Error logs an error message with the given tags
 func (z *ZTelemetry) Error(ctx context.Context, msg string, tags ...ZField) {
 	fields := make([]zap.Field, len(tags))
 	for i, tag := range tags {
