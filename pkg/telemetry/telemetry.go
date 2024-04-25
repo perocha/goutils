@@ -85,23 +85,6 @@ func (t *Telemetry) TrackTrace(ctx context.Context, message string, severity Sev
 	// Create tags for ZTelemetry
 	zFields := t.createZTags(operationID, properties)
 
-	/*
-		// Create tags for ZTelemetry
-		zFields := make([]ZField, 0)
-
-		// Add properties to tags
-		for k, v := range properties {
-			zFields = append(zFields, String(k, v))
-		}
-
-		operationID, ok := ctx.Value(OperationIDKeyContextKey).(string)
-		if ok && operationID != "" {
-			zFields = append(zFields, String(string(OperationIDKeyContextKey), operationID))
-		}
-
-		// Add service name to tags
-		zFields = append(zFields, String("ServiceName", t.serviceName))
-	*/
 	// Log using ZTelemetry
 	switch severity {
 	case Verbose:

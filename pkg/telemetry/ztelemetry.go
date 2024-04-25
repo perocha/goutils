@@ -34,8 +34,6 @@ func (z *ZTelemetry) Debug(ctx context.Context, msg string, tags ...ZField) {
 	for i, tag := range tags {
 		fields[i] = zap.String(tag.Key, tag.Value)
 	}
-	operationID, _ := ctx.Value(OperationIDKeyContextKey).(string)
-	fields = append(fields, zap.String(string(OperationIDKeyContextKey), operationID))
 	z.logger.Debug(msg, fields...)
 }
 
@@ -45,8 +43,7 @@ func (z *ZTelemetry) Info(ctx context.Context, msg string, tags ...ZField) {
 	for i, tag := range tags {
 		fields[i] = zap.String(tag.Key, tag.Value)
 	}
-	operationID, _ := ctx.Value(OperationIDKeyContextKey).(string)
-	fields = append(fields, zap.String(string(OperationIDKeyContextKey), operationID))
+
 	z.logger.Info(msg, fields...)
 }
 
@@ -56,8 +53,6 @@ func (z *ZTelemetry) Warn(ctx context.Context, msg string, tags ...ZField) {
 	for i, tag := range tags {
 		fields[i] = zap.String(tag.Key, tag.Value)
 	}
-	operationID, _ := ctx.Value(OperationIDKeyContextKey).(string)
-	fields = append(fields, zap.String(string(OperationIDKeyContextKey), operationID))
 	z.logger.Warn(msg, fields...)
 }
 
@@ -67,8 +62,6 @@ func (z *ZTelemetry) Error(ctx context.Context, msg string, tags ...ZField) {
 	for i, tag := range tags {
 		fields[i] = zap.String(tag.Key, tag.Value)
 	}
-	operationID, _ := ctx.Value(OperationIDKeyContextKey).(string)
-	fields = append(fields, zap.String(string(OperationIDKeyContextKey), operationID))
 	z.logger.Error(msg, fields...)
 }
 
