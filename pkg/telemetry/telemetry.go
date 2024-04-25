@@ -31,7 +31,7 @@ const (
 )
 
 // Initializes a new telemetry client
-func Initialize(instrumentationKey string, serviceName string) (*Telemetry, error) {
+func Initialize(instrumentationKey string, serviceName string, logLevel string) (*Telemetry, error) {
 	if instrumentationKey == "" {
 		return nil, errors.New("app insights instrumentation key not initialized")
 	}
@@ -43,7 +43,7 @@ func Initialize(instrumentationKey string, serviceName string) (*Telemetry, erro
 	client.Context().Tags.Cloud().SetRole(serviceName)
 
 	// Initialize ZTelemetry with caller skip 2 (so it will skip the ZTelemetry and this function)
-	ztelemetry, err := NewZTelemetry(2)
+	ztelemetry, err := NewZTelemetry(logLevel, 2)
 	if err != nil {
 		return nil, err
 	}

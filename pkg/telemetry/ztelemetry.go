@@ -15,7 +15,23 @@ type ZField struct {
 	Value string
 }
 
-func NewZTelemetry(callerSkip int64) (*ZTelemetry, error) {
+// NewZTelemetry creates a new ZTelemetry instance
+func NewZTelemetry(LogLevel string, callerSkip int64) (*ZTelemetry, error) {
+	// Define configuration for the logger
+	config := zap.NewProductionConfig()
+
+	// Set the log level
+	switch LogLevel {
+	case "debug":
+		config.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
+	case "info":
+		config.Level = zap.NewAtomicLevelAt(zap.InfoLevel)
+	case "warn":
+		config.Level = zap.NewAtomicLevelAt(zap.WarnLevel)
+	case "error":
+		config.Level = zap.NewAtomicLevelAt(zap.ErrorLevel)
+	}
+
 	// Create a new logger, with the provided caller skip (1 will skip the current frame, since we are in the telemetry package)
 	logger, err := zap.NewProduction(zap.AddCallerSkip(int(callerSkip)))
 	if err != nil {
