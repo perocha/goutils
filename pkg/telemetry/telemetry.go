@@ -42,8 +42,8 @@ func Initialize(instrumentationKey string, serviceName string) (*Telemetry, erro
 	// Set the role name
 	client.Context().Tags.Cloud().SetRole(serviceName)
 
-	// Initialize ZTelemetry
-	ztelemetry, err := NewZTelemetry()
+	// Initialize ZTelemetry with caller skip 2 (so it will skip the ZTelemetry and this function)
+	ztelemetry, err := NewZTelemetry(2)
 	if err != nil {
 		return nil, err
 	}
