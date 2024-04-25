@@ -10,7 +10,10 @@ type ZTelemetry struct {
 	logger *zap.Logger
 }
 
-type ZField = zap.Field
+type ZField struct {
+	Key   string
+	Value string
+}
 
 func NewZTelemetry() (*ZTelemetry, error) {
 	logger, err := zap.NewProduction()
@@ -20,16 +23,28 @@ func NewZTelemetry() (*ZTelemetry, error) {
 	return &ZTelemetry{logger: logger}, nil
 }
 
+func String(key string, val string) ZField {
+	return ZField{Key: key, Value: val}
+}
+
 func (z *ZTelemetry) Info(ctx context.Context, msg string, tags ...ZField) {
+	fields := make([]zap.Field, len(tags))
+	for i, tag := range tags {
+		fields[i] = zap.String(tag.Key, tag.Value)
+	}
 	operationID, _ := ctx.Value(OperationIDKeyContextKey).(string)
-	tags = append(tags, zap.String(string(OperationIDKeyContextKey), operationID))
-	z.logger.Info(msg, tags...)
+	fields = append(fields, zap.String(string(OperationIDKeyContextKey), operationID))
+	z.logger.Info(msg, fields...)
 }
 
 func (z *ZTelemetry) Error(ctx context.Context, msg string, tags ...ZField) {
+	fields := make([]zap.Field, len(tags))
+	for i, tag := range tags {
+		fields[i] = zap.String(tag.Key, tag.Value)
+	}
 	operationID, _ := ctx.Value(OperationIDKeyContextKey).(string)
-	tags = append(tags, zap.String(string(OperationIDKeyContextKey), operationID))
-	z.logger.Error(msg, tags...)
+	fields = append(fields, zap.String(string(OperationIDKeyContextKey), operationID))
+	z.logger.Error(msg, fields...)
 }
 
 func (z *ZTelemetry) Sync() error {
