@@ -65,7 +65,7 @@ func (t *Telemetry) TrackTrace(ctx context.Context, message string, severity Sev
 
 	// Get operationID from context
 	operationID, ok := ctx.Value(OperationIDKeyContextKey).(string)
-	if !ok && operationID == "" {
+	if ok && operationID != "" {
 		zFields = append(zFields, String(string(OperationIDKeyContextKey), operationID))
 	}
 
