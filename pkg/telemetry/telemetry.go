@@ -59,6 +59,12 @@ func Initialize(instrumentationKey string, serviceName string) (*Telemetry, erro
 func (t *Telemetry) TrackTrace(ctx context.Context, message string, severity SeverityLevel, properties map[string]string, logToConsole ...bool) {
 	// Create tags for ZTelemetry
 	zFields := make([]ZField, 0)
+
+	// Add properties to tags
+	for k, v := range properties {
+		zFields = append(zFields, String(k, v))
+	}
+
 	operationID, ok := ctx.Value(OperationIDKeyContextKey).(string)
 	if ok && operationID != "" {
 		zFields = append(zFields, String(string(OperationIDKeyContextKey), operationID))
@@ -66,11 +72,6 @@ func (t *Telemetry) TrackTrace(ctx context.Context, message string, severity Sev
 
 	// Add service name to tags
 	zFields = append(zFields, String("ServiceName", t.serviceName))
-
-	// Add properties to tags
-	for k, v := range properties {
-		zFields = append(zFields, String(k, v))
-	}
 
 	// Log using ZTelemetry
 	switch severity {
