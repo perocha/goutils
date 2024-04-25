@@ -55,35 +55,24 @@ func Initialize(instrumentationKey string, serviceName string) (*Telemetry, erro
 	}, nil
 }
 
-func (t *Telemetry) createZTags(operationID string, properties map[string]string) []ZField {
+// TrackTrace sends a trace telemetry event
+func (t *Telemetry) TrackTrace(ctx context.Context, message string, severity SeverityLevel, properties map[string]string, logToConsole ...bool) {
 	// Create tags for ZTelemetry
 	zFields := make([]ZField, 0)
+
+	// Add service name to tags
+	zFields = append(zFields, String("ServiceName", t.serviceName))
+
+	// Get operationID from context
+	operationID, ok := ctx.Value(OperationIDKeyContextKey).(string)
+	if !ok && operationID == "" {
+		zFields = append(zFields, String(string(OperationIDKeyContextKey), operationID))
+	}
 
 	// Add properties to tags
 	for k, v := range properties {
 		zFields = append(zFields, String(k, v))
 	}
-
-	if operationID != "" {
-		zFields = append(zFields, String(string(OperationIDKeyContextKey), operationID))
-	}
-
-	// Add service name to tags
-	zFields = append(zFields, String("ServiceName", t.serviceName))
-
-	return zFields
-}
-
-// TrackTrace sends a trace telemetry event
-func (t *Telemetry) TrackTrace(ctx context.Context, message string, severity SeverityLevel, properties map[string]string, logToConsole ...bool) {
-	// Get operationID from context
-	operationID, ok := ctx.Value(OperationIDKeyContextKey).(string)
-	if !ok {
-		operationID = ""
-	}
-
-	// Create tags for ZTelemetry
-	zFields := t.createZTags(operationID, properties)
 
 	// Log using ZTelemetry
 	switch severity {
@@ -91,14 +80,37 @@ func (t *Telemetry) TrackTrace(ctx context.Context, message string, severity Sev
 		t.ztelemetry.Debug(ctx, message, zFields...)
 	case Information:
 		t.ztelemetry.Info(ctx, message, zFields...)
+		t.AppInsightsTrackTrace(ctx, message, severity, operationID, properties)
 	case Warning:
 		t.ztelemetry.Warn(ctx, message, zFields...)
+		t.AppInsightsTrackTrace(ctx, message, severity, operationID, properties)
 	case Error, Critical:
 		t.ztelemetry.Error(ctx, message, zFields...)
+		t.AppInsightsTrackTrace(ctx, message, severity, operationID, properties)
 	default:
 		t.ztelemetry.Info(ctx, message, zFields...)
+		t.AppInsightsTrackTrace(ctx, message, severity, operationID, properties)
 	}
 
+	// Append the service name to App Insights message
+	txtMessage := fmt.Sprintf("%s::%s", t.serviceName, message)
+
+	// Create the new trace
+	trace := appinsights.NewTraceTelemetry(txtMessage, contracts.SeverityLevel(severity))
+	for k, v := range properties {
+		trace.Properties[k] = v
+	}
+
+	// Set parent id, using the operationID from the context
+	if operationID != "" {
+		trace.Tags.Operation().SetParentId(operationID)
+	}
+
+	// Send the trace to App Insights
+	t.client.Track(trace)
+}
+
+func (t *Telemetry) AppInsightsTrackTrace(ctx context.Context, message string, severity SeverityLevel, operationID string, properties map[string]string) {
 	// Append the service name to App Insights message
 	txtMessage := fmt.Sprintf("%s::%s", t.serviceName, message)
 
