@@ -56,7 +56,7 @@ func Initialize(instrumentationKey string, serviceName string) (*Telemetry, erro
 }
 
 // TrackTrace sends a trace telemetry event
-func (t *Telemetry) TrackTrace(ctx context.Context, message string, severity SeverityLevel, properties map[string]string) {
+func (t *Telemetry) TrackTrace(ctx context.Context, message string, severity SeverityLevel, properties map[string]string, logToConsole ...bool) {
 	// Create tags for ZTelemetry
 	zFields := make([]ZField, 0)
 	operationID, ok := ctx.Value(OperationIDKeyContextKey).(string)
