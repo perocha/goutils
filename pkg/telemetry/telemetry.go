@@ -77,7 +77,10 @@ func (t *Telemetry) createZTags(operationID string, properties map[string]string
 // TrackTrace sends a trace telemetry event
 func (t *Telemetry) TrackTrace(ctx context.Context, message string, severity SeverityLevel, properties map[string]string, logToConsole ...bool) {
 	// Get operationID from context
-	operationID := ctx.Value(OperationIDKeyContextKey).(string)
+	operationID, ok := ctx.Value(OperationIDKeyContextKey).(string)
+	if !ok {
+		operationID = ""
+	}
 
 	// Create tags for ZTelemetry
 	zFields := t.createZTags(operationID, properties)
