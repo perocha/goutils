@@ -17,11 +17,6 @@ type XTelemetry interface {
 	Error(ctx context.Context, message string, fields ...XField)
 }
 
-type XField struct {
-	Key   string
-	Value interface{}
-}
-
 type XTelemetryImpl struct {
 	logger      *zap.Logger
 	appinsights appinsights.TelemetryClient
