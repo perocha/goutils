@@ -26,8 +26,8 @@ const (
 	Verbose     SeverityLevel = SeverityLevel(contracts.Verbose)
 	Information SeverityLevel = SeverityLevel(contracts.Information)
 	Warning     SeverityLevel = SeverityLevel(contracts.Warning)
-	Error       SeverityLevel = SeverityLevel(contracts.Error)
-	Critical    SeverityLevel = SeverityLevel(contracts.Critical)
+	//	Error       SeverityLevel = SeverityLevel(contracts.Error)
+	Critical SeverityLevel = SeverityLevel(contracts.Critical)
 )
 
 // Initializes a new telemetry client
@@ -55,6 +55,7 @@ func Initialize(instrumentationKey string, serviceName string, logLevel string) 
 	}, nil
 }
 
+/*
 // TrackTrace sends a trace telemetry event
 func (t *Telemetry) TrackTrace(ctx context.Context, message string, severity SeverityLevel, properties map[string]string, logToConsole ...bool) {
 	// Create tags for ZTelemetry
@@ -128,8 +129,7 @@ func (t *Telemetry) AppInsightsTrackTrace(ctx context.Context, message string, s
 	// Send the trace to App Insights
 	t.client.Track(trace)
 }
-
-/*
+*/
 
 // TrackTrace sends a trace telemetry event
 func (t *Telemetry) TrackTrace(ctx context.Context, message string, severity SeverityLevel, properties map[string]string, logToConsole bool) {
@@ -170,7 +170,6 @@ func (t *Telemetry) TrackTrace(ctx context.Context, message string, severity Sev
 	// Send the trace to App Insights
 	t.client.Track(trace)
 }
-*/
 
 // TrackException sends an exception telemetry event
 func (t *Telemetry) TrackException(ctx context.Context, message string, err error, severity SeverityLevel, properties map[string]string, logToConsole bool) {

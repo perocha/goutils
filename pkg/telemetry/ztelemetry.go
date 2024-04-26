@@ -60,10 +60,6 @@ func NewZTelemetry(LogLevel string, callerSkip int) (*ZTelemetry, error) {
 	return &ZTelemetry{logger: logger}, nil
 }
 
-func String(key string, val string) ZField {
-	return ZField{Key: key, Value: val}
-}
-
 // Debug logs a debug message with the given tags
 func (z *ZTelemetry) Debug(ctx context.Context, msg string, tags ...ZField) {
 	fields := make([]zap.Field, len(tags))
