@@ -56,6 +56,7 @@ func NewZTelemetry(LogLevel string, callerSkip int) (*ZTelemetry, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return &ZTelemetry{logger: logger}, nil
 }
 
