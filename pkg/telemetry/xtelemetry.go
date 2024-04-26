@@ -17,12 +17,12 @@ type XTelemetryObject interface {
 	Error(ctx context.Context, message string, fields ...XField)
 }
 
-type XTelemetry struct {
+type XTelemetryObjectImpl struct {
 	logger      *zap.Logger
 	appinsights appinsights.TelemetryClient
 }
 
-func NewXTelemetry(cc XTelemetryConfig) (*XTelemetry, error) {
+func NewXTelemetry(cc XTelemetryConfig) (*XTelemetryObjectImpl, error) {
 	if cc.GetInstrumentationKey() == "" {
 		return nil, errors.New("app insights instrumentation key not initialized")
 	}
@@ -74,17 +74,17 @@ func NewXTelemetry(cc XTelemetryConfig) (*XTelemetry, error) {
 		return nil, err
 	}
 
-	return &XTelemetry{
+	return &XTelemetryObjectImpl{
 		logger:      logger,
 		appinsights: appInsightsClient,
 	}, nil
 }
 
-func (t *XTelemetry) Debug(ctx context.Context, message string, fields ...XField) {
+func (t *XTelemetryObjectImpl) Debug(ctx context.Context, message string, fields ...XField) {
 	t.logger.Debug(message, convertFields(fields)...)
 }
 
-func (t *XTelemetry) Info(ctx context.Context, message string, fields ...XField) {
+func (t *XTelemetryObjectImpl) Info(ctx context.Context, message string, fields ...XField) {
 	// Create the new trace
 	t.logger.Info(message, convertFields(fields)...)
 
@@ -111,11 +111,11 @@ func (t *XTelemetry) Info(ctx context.Context, message string, fields ...XField)
 	t.appinsights.Track(trace)
 }
 
-func (t *XTelemetry) Warn(ctx context.Context, message string, fields ...XField) {
+func (t *XTelemetryObjectImpl) Warn(ctx context.Context, message string, fields ...XField) {
 	t.logger.Warn(message, convertFields(fields)...)
 }
 
-func (t *XTelemetry) Error(ctx context.Context, message string, fields ...XField) {
+func (t *XTelemetryObjectImpl) Error(ctx context.Context, message string, fields ...XField) {
 	t.logger.Error(message, convertFields(fields)...)
 }
 
