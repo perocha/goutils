@@ -16,9 +16,13 @@ type ZField struct {
 }
 
 // NewZTelemetry creates a new ZTelemetry instance
-func NewZTelemetry(LogLevel string, callerSkip int64) (*ZTelemetry, error) {
+func NewZTelemetry(LogLevel string, callerSkip int) (*ZTelemetry, error) {
 	// Define configuration for the logger
-	config := zap.NewProductionConfig()
+	config := zap.Config{
+		Encoding:         "json",
+		OutputPaths:      []string{"stdout"},
+		ErrorOutputPaths: []string{"stderr"},
+	}
 
 	// Set the log level
 	switch LogLevel {
@@ -33,7 +37,7 @@ func NewZTelemetry(LogLevel string, callerSkip int64) (*ZTelemetry, error) {
 	}
 
 	// Create a new logger, with the provided caller skip (1 will skip the current frame, since we are in the telemetry package)
-	logger, err := zap.NewProduction(zap.AddCallerSkip(int(callerSkip)))
+	logger, err := config.Build(zap.AddCallerSkip(callerSkip))
 	if err != nil {
 		return nil, err
 	}
