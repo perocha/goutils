@@ -20,6 +20,7 @@ type XTelemetryObject interface {
 type XTelemetryObjectImpl struct {
 	logger      *zap.Logger
 	appinsights appinsights.TelemetryClient
+	serviceName string
 }
 
 func NewXTelemetry(cc XTelemetryConfig) (*XTelemetryObjectImpl, error) {
@@ -85,23 +86,26 @@ func (t *XTelemetryObjectImpl) Debug(ctx context.Context, message string, fields
 }
 
 func (t *XTelemetryObjectImpl) Info(ctx context.Context, message string, fields ...XField) {
-	// Create the new trace
-	t.logger.Info(message, convertFields(fields)...)
-
-	// Create the new trace
-	trace := appinsights.NewTraceTelemetry(message, contracts.Information)
-
 	// Get the operation ID from the context
 	operationID, ok := ctx.Value("OperationID").(string)
 	if !ok {
 		operationID = ""
 	}
 
-	// Add properties to the trace
+	// Create the new log trace
+	telemFields := convertFields(fields)
+	telemFields = append(telemFields, zap.String("ServiceName", t.serviceName))
+	if operationID != "" {
+		telemFields = append(telemFields, zap.String("OperationID", operationID))
+	}
+	t.logger.Info(message, telemFields...)
+
+	// Create the new trace in App Insights
+	trace := appinsights.NewTraceTelemetry(message, contracts.Information)
+	// Add properties to App Insights trace
 	for _, field := range fields {
 		trace.Properties[field.Key] = field.Value.(string)
 	}
-
 	// Set parent id, using the operationID from the context
 	if operationID != "" {
 		trace.Tags.Operation().SetParentId(operationID)
@@ -116,8 +120,19 @@ func (t *XTelemetryObjectImpl) Warn(ctx context.Context, message string, fields 
 }
 
 func (t *XTelemetryObjectImpl) Error(ctx context.Context, message string, fields ...XField) {
+	// Get the operation ID from the context
+	operationID, ok := ctx.Value("OperationID").(string)
+	if !ok {
+		operationID = ""
+	}
+
 	// Create the new error trace
-	t.logger.Error(message, convertFields(fields)...)
+	telemFields := convertFields(fields)
+	telemFields = append(telemFields, zap.String("ServiceName", t.serviceName))
+	if operationID != "" {
+		telemFields = append(telemFields, zap.String("OperationID", operationID))
+	}
+	t.logger.Error(message, telemFields...)
 
 	// Create the new exception
 	exception := appinsights.NewExceptionTelemetry(message)
@@ -125,12 +140,6 @@ func (t *XTelemetryObjectImpl) Error(ctx context.Context, message string, fields
 	// Add properties to the exception
 	for _, field := range fields {
 		exception.Properties[field.Key] = field.Value.(string)
-	}
-
-	// Get the operation ID from the context
-	operationID, ok := ctx.Value("OperationID").(string)
-	if !ok {
-		operationID = ""
 	}
 
 	// Set parent id, using the operationID from the context
