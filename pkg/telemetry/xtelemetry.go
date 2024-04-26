@@ -22,28 +22,21 @@ type XField struct {
 	Value interface{}
 }
 
-type XTelemetryConfig struct {
-	instrumentationKey string
-	serviceName        string
-	logLevel           string
-	callerSkip         int
-}
-
 type XTelemetryImpl struct {
 	logger      *zap.Logger
 	appinsights appinsights.TelemetryClient
 }
 
-func NewXTelemetry(customConfig XTelemetryConfig) (*XTelemetryImpl, error) {
-	if customConfig.instrumentationKey == "" {
+func NewXTelemetry(cc XTelemetryConfig) (*XTelemetryImpl, error) {
+	if cc.GetInstrumentationKey() == "" {
 		return nil, errors.New("app insights instrumentation key not initialized")
 	}
 
 	// Initialize telemetry client
-	appInsightsClient := appinsights.NewTelemetryClient(customConfig.instrumentationKey)
+	appInsightsClient := appinsights.NewTelemetryClient(cc.GetInstrumentationKey())
 
 	// Set the role name
-	appInsightsClient.Context().Tags.Cloud().SetRole(customConfig.serviceName)
+	appInsightsClient.Context().Tags.Cloud().SetRole(cc.GetServiceName())
 
 	// Define configuration for the logger
 	zapconfig := zap.Config{
@@ -67,7 +60,7 @@ func NewXTelemetry(customConfig XTelemetryConfig) (*XTelemetryImpl, error) {
 	}
 
 	// Set the log level
-	switch customConfig.logLevel {
+	switch cc.GetLogLevel() {
 	case "debug":
 		zapconfig.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
 	case "info":
@@ -81,7 +74,7 @@ func NewXTelemetry(customConfig XTelemetryConfig) (*XTelemetryImpl, error) {
 	}
 
 	// Create a new logger, with the provided caller skip (1 would skip the current frame, since we are in the telemetry package)
-	logger, err := zapconfig.Build(zap.AddCallerSkip(customConfig.callerSkip))
+	logger, err := zapconfig.Build(zap.AddCallerSkip(cc.GetCallerSkip()))
 	if err != nil {
 		return nil, err
 	}
