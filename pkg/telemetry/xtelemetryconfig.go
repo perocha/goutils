@@ -11,7 +11,7 @@ type XTelemetryConfig interface {
 	SetCallerSkip(int)
 }
 
-type xTelemetryConfig struct {
+type xConfig struct {
 	instrumentationKey string
 	serviceName        string
 	logLevel           string
@@ -19,7 +19,7 @@ type xTelemetryConfig struct {
 }
 
 func NewXTelemetryConfig(instrumentationKey string, serviceName string, logLevel string, callerSkip int) XTelemetryConfig {
-	return &xTelemetryConfig{
+	return &xConfig{
 		instrumentationKey: instrumentationKey,
 		serviceName:        serviceName,
 		logLevel:           logLevel,
@@ -27,34 +27,34 @@ func NewXTelemetryConfig(instrumentationKey string, serviceName string, logLevel
 	}
 }
 
-func (c *xTelemetryConfig) GetInstrumentationKey() string {
+func (c *xConfig) GetInstrumentationKey() string {
 	return c.instrumentationKey
 }
 
-func (c *xTelemetryConfig) GetServiceName() string {
+func (c *xConfig) GetServiceName() string {
 	return c.serviceName
 }
 
-func (c *xTelemetryConfig) GetLogLevel() string {
+func (c *xConfig) GetLogLevel() string {
 	return c.logLevel
 }
 
-func (c *xTelemetryConfig) GetCallerSkip() int {
+func (c *xConfig) GetCallerSkip() int {
 	return c.callerSkip
 }
 
-func (c *xTelemetryConfig) SetInstrumentationKey(instrumentationKey string) {
+func (c *xConfig) SetInstrumentationKey(instrumentationKey string) {
 	c.instrumentationKey = instrumentationKey
 }
 
-func (c *xTelemetryConfig) SetServiceName(serviceName string) {
+func (c *xConfig) SetServiceName(serviceName string) {
 	c.serviceName = serviceName
 }
 
-func (c *xTelemetryConfig) SetLogLevel(logLevel string) {
+func (c *xConfig) SetLogLevel(logLevel string) {
 	c.logLevel = logLevel
 }
 
-func (c *xTelemetryConfig) SetCallerSkip(callerSkip int) {
+func (c *xConfig) SetCallerSkip(callerSkip int) {
 	c.callerSkip = callerSkip
 }

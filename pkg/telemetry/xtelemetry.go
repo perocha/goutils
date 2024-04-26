@@ -10,19 +10,19 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-type XTelemetry interface {
+type XTelemetryObject interface {
 	Debug(ctx context.Context, message string, fields ...XField)
 	Info(ctx context.Context, message string, fields ...XField)
 	Warn(ctx context.Context, message string, fields ...XField)
 	Error(ctx context.Context, message string, fields ...XField)
 }
 
-type XTelemetryImpl struct {
+type XTelemetry struct {
 	logger      *zap.Logger
 	appinsights appinsights.TelemetryClient
 }
 
-func NewXTelemetry(cc XTelemetryConfig) (*XTelemetryImpl, error) {
+func NewXTelemetry(cc XTelemetryConfig) (*XTelemetry, error) {
 	if cc.GetInstrumentationKey() == "" {
 		return nil, errors.New("app insights instrumentation key not initialized")
 	}
@@ -74,17 +74,17 @@ func NewXTelemetry(cc XTelemetryConfig) (*XTelemetryImpl, error) {
 		return nil, err
 	}
 
-	return &XTelemetryImpl{
+	return &XTelemetry{
 		logger:      logger,
 		appinsights: appInsightsClient,
 	}, nil
 }
 
-func (t *XTelemetryImpl) Debug(ctx context.Context, message string, fields ...XField) {
+func (t *XTelemetry) Debug(ctx context.Context, message string, fields ...XField) {
 	t.logger.Debug(message, convertFields(fields)...)
 }
 
-func (t *XTelemetryImpl) Info(ctx context.Context, message string, fields ...XField) {
+func (t *XTelemetry) Info(ctx context.Context, message string, fields ...XField) {
 	// Create the new trace
 	t.logger.Info(message, convertFields(fields)...)
 
@@ -111,11 +111,11 @@ func (t *XTelemetryImpl) Info(ctx context.Context, message string, fields ...XFi
 	t.appinsights.Track(trace)
 }
 
-func (t *XTelemetryImpl) Warn(ctx context.Context, message string, fields ...XField) {
+func (t *XTelemetry) Warn(ctx context.Context, message string, fields ...XField) {
 	t.logger.Warn(message, convertFields(fields)...)
 }
 
-func (t *XTelemetryImpl) Error(ctx context.Context, message string, fields ...XField) {
+func (t *XTelemetry) Error(ctx context.Context, message string, fields ...XField) {
 	t.logger.Error(message, convertFields(fields)...)
 }
 
