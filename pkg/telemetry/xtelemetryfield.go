@@ -16,7 +16,3 @@ func Int(key string, val int) XField {
 func Bool(key string, val bool) XField {
 	return XField{Key: key, Value: val}
 }
-
-func Error(key string, val error) XField {
-	return XField{Key: key, Value: val}
-}

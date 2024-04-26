@@ -26,8 +26,8 @@ const (
 	Verbose     SeverityLevel = SeverityLevel(contracts.Verbose)
 	Information SeverityLevel = SeverityLevel(contracts.Information)
 	Warning     SeverityLevel = SeverityLevel(contracts.Warning)
-	//	Error       SeverityLevel = SeverityLevel(contracts.Error)
-	Critical SeverityLevel = SeverityLevel(contracts.Critical)
+	Error       SeverityLevel = SeverityLevel(contracts.Error)
+	Critical    SeverityLevel = SeverityLevel(contracts.Critical)
 )
 
 // Initializes a new telemetry client
