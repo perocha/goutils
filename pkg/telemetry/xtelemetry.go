@@ -17,6 +17,7 @@ type XTelemetryObject interface {
 	Error(ctx context.Context, message string, fields ...XField)
 }
 
+// XTelemetryObjectImpl will store the logger, the app insights client and the service name
 type XTelemetryObjectImpl struct {
 	logger      *zap.Logger
 	appinsights appinsights.TelemetryClient
