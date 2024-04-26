@@ -116,7 +116,29 @@ func (t *XTelemetryObjectImpl) Warn(ctx context.Context, message string, fields 
 }
 
 func (t *XTelemetryObjectImpl) Error(ctx context.Context, message string, fields ...XField) {
+	// Create the new error trace
 	t.logger.Error(message, convertFields(fields)...)
+
+	// Create the new exception
+	exception := appinsights.NewExceptionTelemetry(message)
+	exception.SeverityLevel = contracts.Error
+	// Add properties to the exception
+	for _, field := range fields {
+		exception.Properties[field.Key] = field.Value.(string)
+	}
+
+	// Get the operation ID from the context
+	operationID, ok := ctx.Value("OperationID").(string)
+	if !ok {
+		operationID = ""
+	}
+
+	// Set parent id, using the operationID from the context
+	if operationID != "" {
+		exception.Tags.Operation().SetParentId(operationID)
+	}
+
+	t.appinsights.Track(exception)
 }
 
 func convertFields(fields []XField) []zap.Field {
