@@ -13,8 +13,8 @@ import (
 
 // Telemetry defines the telemetry client
 type Telemetry struct {
-	client      appinsights.TelemetryClient
-	ztelemetry  *ZTelemetry
+	client appinsights.TelemetryClient
+	//	ztelemetry  *ZTelemetry
 	serviceName string
 }
 
@@ -43,15 +43,15 @@ func Initialize(instrumentationKey string, serviceName string, logLevel string) 
 	client.Context().Tags.Cloud().SetRole(serviceName)
 
 	// Initialize ZTelemetry with caller skip 2 (so it will skip the ZTelemetry and this function)
-	ztelemetry, err := NewZTelemetry(logLevel, 2)
-	if err != nil {
-		return nil, err
-	}
-
+	/*	ztelemetry, err := NewZTelemetry(logLevel, 2)
+		if err != nil {
+			return nil, err
+		}
+	*/
 	return &Telemetry{
 		client:      client,
 		serviceName: serviceName,
-		ztelemetry:  ztelemetry,
+		//		ztelemetry:  ztelemetry,
 	}, nil
 }
 
