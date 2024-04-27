@@ -95,16 +95,16 @@ func (t *XTelemetryObjectImpl) Debug(ctx context.Context, message string, fields
 // Info will log the message using xTelemetry and also send a trace to App Insights
 func (t *XTelemetryObjectImpl) Info(ctx context.Context, message string, fields ...XField) {
 	// Get the operation ID from the context
-	operationID, ok := ctx.Value("OperationID").(string)
+	operationID, ok := ctx.Value(OperationIDKeyContextKey).(string)
 	if !ok {
 		operationID = ""
 	}
 
 	// Create the new log trace
 	telemFields := convertFields(fields)
-	telemFields = append(telemFields, zap.String("ServiceName", t.xConfig.GetServiceName()))
+	telemFields = append(telemFields, zap.String(string(ServiceNameKey), t.xConfig.GetServiceName()))
 	if operationID != "" {
-		telemFields = append(telemFields, zap.String("OperationID", operationID))
+		telemFields = append(telemFields, zap.String(string(OperationIDKeyContextKey), operationID))
 	}
 	t.logger.Info(message, telemFields...)
 
