@@ -118,7 +118,10 @@ func (t *XTelemetryObjectImpl) Info(ctx context.Context, message string, fields 
 		// Set parent id, using the operationID from the context
 		if operationID != "" {
 			trace.Tags.Operation().SetParentId(operationID)
+			trace.Properties[string(OperationIDKeyContextKey)] = operationID
 		}
+		// Add service name as a property
+		trace.Properties[string(ServiceNameKey)] = t.xConfig.GetServiceName()
 
 		// Send the trace to App Insights
 		t.appinsights.Track(trace)
@@ -160,7 +163,10 @@ func (t *XTelemetryObjectImpl) Error(ctx context.Context, message string, fields
 		// Set parent id, using the operationID from the context
 		if operationID != "" {
 			exception.Tags.Operation().SetParentId(operationID)
+			exception.Properties[string(OperationIDKeyContextKey)] = operationID
 		}
+		// Add service name as a property
+		exception.Properties[string(ServiceNameKey)] = t.xConfig.GetServiceName()
 
 		t.appinsights.Track(exception)
 	}
@@ -195,7 +201,10 @@ func (t *XTelemetryObjectImpl) Dependency(ctx context.Context, dependencyType st
 		// Set parent id, using the operationID from the context
 		if operationID != "" {
 			dependency.Tags.Operation().SetParentId(operationID)
+			dependency.Properties[string(OperationIDKeyContextKey)] = operationID
 		}
+		// Add service name as a property
+		dependency.Properties[string(ServiceNameKey)] = t.xConfig.GetServiceName()
 
 		t.appinsights.Track(dependency)
 	}
@@ -230,6 +239,8 @@ func (t *XTelemetryObjectImpl) Request(ctx context.Context, method string, url s
 		if operationID != "" {
 			request.Properties[string(OperationIDKeyContextKey)] = operationID
 		}
+		// Add service name as a property
+		request.Properties[string(ServiceNameKey)] = t.xConfig.GetServiceName()
 
 		t.appinsights.Track(request)
 	}
