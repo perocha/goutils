@@ -71,12 +71,10 @@ func NewXTelemetry(cc XTelemetryConfig) (*XTelemetryObjectImpl, error) {
 	var appInsightsClient appinsights.TelemetryClient
 	if cc.GetInstrumentationKey() != "" {
 		// Initialize telemetry client
-		appInsightsClient := appinsights.NewTelemetryClient(cc.GetInstrumentationKey())
+		appInsightsClient = appinsights.NewTelemetryClient(cc.GetInstrumentationKey())
 
 		// Set the role name
 		appInsightsClient.Context().Tags.Cloud().SetRole(cc.GetServiceName())
-	} else {
-		appInsightsClient = nil
 	}
 
 	return &XTelemetryObjectImpl{
