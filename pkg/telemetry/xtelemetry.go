@@ -175,8 +175,8 @@ func convertFields(fields []XField) []zap.Field {
 }
 
 // Helper function to retrieve the telemetry client from the context
-func GetXTelemetryClient(ctx context.Context) *XTelemetryObject {
-	telemetryClient, ok := ctx.Value(TelemetryContextKey).(*XTelemetryObject)
+func GetXTelemetryClient(ctx context.Context) *XTelemetryObjectImpl {
+	telemetryClient, ok := ctx.Value(TelemetryContextKey).(*XTelemetryObjectImpl)
 	if !ok {
 		log.Panic("Telemetry client not found in context")
 	}
