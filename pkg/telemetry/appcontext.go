@@ -10,4 +10,7 @@ const (
 
 	// TelemetryContextKey represents the key type for the telemetry object in context
 	TelemetryContextKey TelemetryObj = "telemetry"
+
+	// Service name key
+	ServiceNameKey = "ServiceName"
 )

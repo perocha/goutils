@@ -3,6 +3,7 @@ package telemetry
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/microsoft/ApplicationInsights-Go/appinsights"
 	"github.com/microsoft/ApplicationInsights-Go/appinsights/contracts"
@@ -15,6 +16,8 @@ type XTelemetryObject interface {
 	Info(ctx context.Context, message string, fields ...XField)
 	Warn(ctx context.Context, message string, fields ...XField)
 	Error(ctx context.Context, message string, fields ...XField)
+	Dependency(ctx context.Context, dependencyType string, target string, success bool, duration time.Duration, message string, fields ...XField)
+	Request(ctx context.Context, method string, url string, duration time.Duration, responseCode string, success bool, source string, message string, fields ...XField)
 }
 
 // XTelemetryObjectImpl will store the logger, the app insights client and the service name
@@ -131,16 +134,16 @@ func (t *XTelemetryObjectImpl) Warn(ctx context.Context, message string, fields 
 // Error will log the message using xTelemetry and also send an exception to App Insights
 func (t *XTelemetryObjectImpl) Error(ctx context.Context, message string, fields ...XField) {
 	// Get the operation ID from the context
-	operationID, ok := ctx.Value("OperationID").(string)
+	operationID, ok := ctx.Value(OperationIDKeyContextKey).(string)
 	if !ok {
 		operationID = ""
 	}
 
 	// Create the new error trace
 	telemFields := convertFields(fields)
-	telemFields = append(telemFields, zap.String("ServiceName", t.xConfig.GetServiceName()))
+	telemFields = append(telemFields, zap.String(string(ServiceNameKey), t.xConfig.GetServiceName()))
 	if operationID != "" {
-		telemFields = append(telemFields, zap.String("OperationID", operationID))
+		telemFields = append(telemFields, zap.String(string(OperationIDKeyContextKey), operationID))
 	}
 	t.logger.Error(message, telemFields...)
 
@@ -160,6 +163,75 @@ func (t *XTelemetryObjectImpl) Error(ctx context.Context, message string, fields
 		}
 
 		t.appinsights.Track(exception)
+	}
+}
+
+// Dependency will log the dependency using xTelemetry and also send a dependency to App Insights
+func (t *XTelemetryObjectImpl) Dependency(ctx context.Context, dependencyType string, target string, success bool, duration time.Duration, message string, fields ...XField) {
+	// Get the operation ID from the context
+	operationID, ok := ctx.Value(OperationIDKeyContextKey).(string)
+	if !ok {
+		operationID = ""
+	}
+
+	// Create an info trace
+	telemFields := convertFields(fields)
+	telemFields = append(telemFields, zap.String(string(ServiceNameKey), t.xConfig.GetServiceName()))
+	if operationID != "" {
+		telemFields = append(telemFields, zap.String(string(OperationIDKeyContextKey), operationID))
+	}
+	t.logger.Info(message, telemFields...)
+
+	// Create the new dependency in App Insights, if the client is initialized
+	if t.appinsights != nil {
+		// Create the new dependency
+		dependency := appinsights.NewRemoteDependencyTelemetry(target, dependencyType, message, success)
+		dependency.Duration = duration
+		// Add properties to the dependency
+		for _, field := range fields {
+			dependency.Properties[field.Key] = field.Value.(string)
+		}
+
+		// Set parent id, using the operationID from the context
+		if operationID != "" {
+			dependency.Tags.Operation().SetParentId(operationID)
+		}
+
+		t.appinsights.Track(dependency)
+	}
+}
+
+// Request will log the request using xTelemetry and also send a request to App Insights
+func (t *XTelemetryObjectImpl) Request(ctx context.Context, method string, url string, duration time.Duration, responseCode string, success bool, source string, message string, fields ...XField) {
+	// Get the operation ID from the context
+	operationID, ok := ctx.Value(OperationIDKeyContextKey).(string)
+	if !ok {
+		operationID = ""
+	}
+
+	// Create an info trace
+	telemFields := convertFields(fields)
+	telemFields = append(telemFields, zap.String(string(ServiceNameKey), t.xConfig.GetServiceName()))
+	if operationID != "" {
+		telemFields = append(telemFields, zap.String(string(OperationIDKeyContextKey), operationID))
+	}
+	t.logger.Info(message, telemFields...)
+
+	// Create the new request in App Insights, if the client is initialized
+	if t.appinsights != nil {
+		// Create the new request
+		request := appinsights.NewRequestTelemetry(method, url, duration, responseCode)
+		request.Duration = duration
+		// Add properties to the request
+		for _, field := range fields {
+			request.Properties[field.Key] = field.Value.(string)
+		}
+		// Append the operation ID to the request properties
+		if operationID != "" {
+			request.Properties[string(OperationIDKeyContextKey)] = operationID
+		}
+
+		t.appinsights.Track(request)
 	}
 }
 
