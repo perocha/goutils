@@ -2,7 +2,7 @@ package telemetry
 
 import (
 	"context"
-	"errors"
+	"log"
 
 	"github.com/microsoft/ApplicationInsights-Go/appinsights"
 	"github.com/microsoft/ApplicationInsights-Go/appinsights/contracts"
@@ -26,16 +26,6 @@ type XTelemetryObjectImpl struct {
 
 // Initialize the telemetry object
 func NewXTelemetry(cc XTelemetryConfig) (*XTelemetryObjectImpl, error) {
-	if cc.GetInstrumentationKey() == "" {
-		return nil, errors.New("app insights instrumentation key not initialized")
-	}
-
-	// Initialize telemetry client
-	appInsightsClient := appinsights.NewTelemetryClient(cc.GetInstrumentationKey())
-
-	// Set the role name
-	appInsightsClient.Context().Tags.Cloud().SetRole(cc.GetServiceName())
-
 	// Define configuration for the logger
 	zapconfig := zap.Config{
 		Development: false,
@@ -77,6 +67,18 @@ func NewXTelemetry(cc XTelemetryConfig) (*XTelemetryObjectImpl, error) {
 		return nil, err
 	}
 
+	// Initialize App Insights client, skip initialization if instrumentation key is not provided
+	var appInsightsClient appinsights.TelemetryClient
+	if cc.GetInstrumentationKey() != "" {
+		// Initialize telemetry client
+		appInsightsClient := appinsights.NewTelemetryClient(cc.GetInstrumentationKey())
+
+		// Set the role name
+		appInsightsClient.Context().Tags.Cloud().SetRole(cc.GetServiceName())
+	} else {
+		appInsightsClient = nil
+	}
+
 	return &XTelemetryObjectImpl{
 		logger:      logger,
 		appinsights: appInsightsClient,
@@ -105,19 +107,21 @@ func (t *XTelemetryObjectImpl) Info(ctx context.Context, message string, fields 
 	}
 	t.logger.Info(message, telemFields...)
 
-	// Create the new trace in App Insights
-	trace := appinsights.NewTraceTelemetry(message, contracts.Information)
-	// Add properties to App Insights trace
-	for _, field := range fields {
-		trace.Properties[field.Key] = field.Value.(string)
-	}
-	// Set parent id, using the operationID from the context
-	if operationID != "" {
-		trace.Tags.Operation().SetParentId(operationID)
-	}
+	// Create the new trace in App Insights, if the client is initialized
+	if t.appinsights != nil {
+		trace := appinsights.NewTraceTelemetry(message, contracts.Information)
+		// Add properties to App Insights trace
+		for _, field := range fields {
+			trace.Properties[field.Key] = field.Value.(string)
+		}
+		// Set parent id, using the operationID from the context
+		if operationID != "" {
+			trace.Tags.Operation().SetParentId(operationID)
+		}
 
-	// Send the trace to App Insights
-	t.appinsights.Track(trace)
+		// Send the trace to App Insights
+		t.appinsights.Track(trace)
+	}
 }
 
 // Warn will log the message using xTelemetry and also send a trace to App Insights
@@ -142,20 +146,23 @@ func (t *XTelemetryObjectImpl) Error(ctx context.Context, message string, fields
 	}
 	t.logger.Error(message, telemFields...)
 
-	// Create the new exception
-	exception := appinsights.NewExceptionTelemetry(message)
-	exception.SeverityLevel = contracts.Error
-	// Add properties to the exception
-	for _, field := range fields {
-		exception.Properties[field.Key] = field.Value.(string)
-	}
+	// Create the new exception in App Insights, if the client is initialized
+	if t.appinsights != nil {
+		// Create the new exception
+		exception := appinsights.NewExceptionTelemetry(message)
+		exception.SeverityLevel = contracts.Error
+		// Add properties to the exception
+		for _, field := range fields {
+			exception.Properties[field.Key] = field.Value.(string)
+		}
 
-	// Set parent id, using the operationID from the context
-	if operationID != "" {
-		exception.Tags.Operation().SetParentId(operationID)
-	}
+		// Set parent id, using the operationID from the context
+		if operationID != "" {
+			exception.Tags.Operation().SetParentId(operationID)
+		}
 
-	t.appinsights.Track(exception)
+		t.appinsights.Track(exception)
+	}
 }
 
 // Convert the telemetry property fields to zap fields
@@ -165,4 +172,13 @@ func convertFields(fields []XField) []zap.Field {
 		zapFields[i] = zap.Any(field.Key, field.Value)
 	}
 	return zapFields
+}
+
+// Helper function to retrieve the telemetry client from the context
+func GetXTelemetryClient(ctx context.Context) *XTelemetryObject {
+	telemetryClient, ok := ctx.Value(TelemetryContextKey).(*XTelemetryObject)
+	if !ok {
+		log.Panic("Telemetry client not found in context")
+	}
+	return telemetryClient
 }
