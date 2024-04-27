@@ -21,7 +21,7 @@ type XTelemetryObject interface {
 type XTelemetryObjectImpl struct {
 	logger      *zap.Logger
 	appinsights appinsights.TelemetryClient
-	serviceName string
+	xConfig     XTelemetryConfig
 }
 
 // Initialize the telemetry object
@@ -80,6 +80,7 @@ func NewXTelemetry(cc XTelemetryConfig) (*XTelemetryObjectImpl, error) {
 	return &XTelemetryObjectImpl{
 		logger:      logger,
 		appinsights: appInsightsClient,
+		xConfig:     cc,
 	}, nil
 }
 
@@ -98,7 +99,7 @@ func (t *XTelemetryObjectImpl) Info(ctx context.Context, message string, fields 
 
 	// Create the new log trace
 	telemFields := convertFields(fields)
-	telemFields = append(telemFields, zap.String("ServiceName", t.serviceName))
+	telemFields = append(telemFields, zap.String("ServiceName", t.xConfig.GetServiceName()))
 	if operationID != "" {
 		telemFields = append(telemFields, zap.String("OperationID", operationID))
 	}
@@ -135,7 +136,7 @@ func (t *XTelemetryObjectImpl) Error(ctx context.Context, message string, fields
 
 	// Create the new error trace
 	telemFields := convertFields(fields)
-	telemFields = append(telemFields, zap.String("ServiceName", t.serviceName))
+	telemFields = append(telemFields, zap.String("ServiceName", t.xConfig.GetServiceName()))
 	if operationID != "" {
 		telemFields = append(telemFields, zap.String("OperationID", operationID))
 	}
