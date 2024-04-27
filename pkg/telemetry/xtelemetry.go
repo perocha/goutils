@@ -16,7 +16,7 @@ type XTelemetryObject interface {
 	Info(ctx context.Context, message string, fields ...XField)
 	Warn(ctx context.Context, message string, fields ...XField)
 	Error(ctx context.Context, message string, fields ...XField)
-	Dependency(ctx context.Context, dependencyType string, target string, success bool, duration time.Duration, message string, fields ...XField)
+	Dependency(ctx context.Context, dependencyType string, target string, success bool, startTime time.Time, endTime time.Time, message string, fields ...XField)
 	Request(ctx context.Context, method string, url string, duration time.Duration, responseCode string, success bool, source string, message string, fields ...XField)
 }
 
@@ -173,7 +173,7 @@ func (t *XTelemetryObjectImpl) Error(ctx context.Context, message string, fields
 }
 
 // Dependency will log the dependency using xTelemetry and also send a dependency to App Insights
-func (t *XTelemetryObjectImpl) Dependency(ctx context.Context, dependencyType string, target string, success bool, duration time.Duration, message string, fields ...XField) {
+func (t *XTelemetryObjectImpl) Dependency(ctx context.Context, dependencyType string, target string, success bool, startTime time.Time, endTime time.Time, message string, fields ...XField) {
 	// Get the operation ID from the context
 	operationID, ok := ctx.Value(OperationIDKeyContextKey).(string)
 	if !ok {
@@ -191,8 +191,8 @@ func (t *XTelemetryObjectImpl) Dependency(ctx context.Context, dependencyType st
 	// Create the new dependency in App Insights, if the client is initialized
 	if t.appinsights != nil {
 		// Create the new dependency
-		dependency := appinsights.NewRemoteDependencyTelemetry(target, dependencyType, message, success)
-		dependency.Duration = duration
+		dependency := appinsights.NewRemoteDependencyTelemetry(message, dependencyType, target, success)
+		dependency.MarkTime(startTime, endTime)
 		// Add properties to the dependency
 		for _, field := range fields {
 			dependency.Properties[field.Key] = field.Value.(string)
@@ -230,7 +230,7 @@ func (t *XTelemetryObjectImpl) Request(ctx context.Context, method string, url s
 	if t.appinsights != nil {
 		// Create the new request
 		request := appinsights.NewRequestTelemetry(method, url, duration, responseCode)
-		request.Duration = duration
+		request.Success = success
 		// Add properties to the request
 		for _, field := range fields {
 			request.Properties[field.Key] = field.Value.(string)
