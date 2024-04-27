@@ -110,7 +110,8 @@ func (t *XTelemetryObjectImpl) Info(ctx context.Context, message string, fields 
 
 	// Create the new trace in App Insights, if the client is initialized
 	if t.appinsights != nil {
-		trace := appinsights.NewTraceTelemetry(message, contracts.Information)
+		// Create the new trace
+		trace := appinsights.NewTraceTelemetry(constructTraceMessage(t.xConfig.GetServiceName(), operationID, message), contracts.Information)
 		// Add properties to App Insights trace
 		for _, field := range fields {
 			trace.Properties[field.Key] = field.Value.(string)
@@ -153,7 +154,7 @@ func (t *XTelemetryObjectImpl) Error(ctx context.Context, message string, fields
 	// Create the new exception in App Insights, if the client is initialized
 	if t.appinsights != nil {
 		// Create the new exception
-		exception := appinsights.NewExceptionTelemetry(message)
+		exception := appinsights.NewExceptionTelemetry(constructTraceMessage(t.xConfig.GetServiceName(), operationID, message))
 		exception.SeverityLevel = contracts.Error
 		// Add properties to the exception
 		for _, field := range fields {
@@ -191,7 +192,7 @@ func (t *XTelemetryObjectImpl) Dependency(ctx context.Context, dependencyType st
 	// Create the new dependency in App Insights, if the client is initialized
 	if t.appinsights != nil {
 		// Create the new dependency
-		dependency := appinsights.NewRemoteDependencyTelemetry(message, dependencyType, target, success)
+		dependency := appinsights.NewRemoteDependencyTelemetry(constructTraceMessage(t.xConfig.GetServiceName(), operationID, message), dependencyType, target, success)
 		dependency.MarkTime(startTime, endTime)
 		// Add properties to the dependency
 		for _, field := range fields {
@@ -262,4 +263,13 @@ func GetXTelemetryClient(ctx context.Context) *XTelemetryObjectImpl {
 		log.Panic("Telemetry client not found in context")
 	}
 	return telemetryClient
+}
+
+// Helper function to construct the trace message
+func constructTraceMessage(serviceName string, operationID string, message string) string {
+	if operationID == "" {
+		return serviceName + "::" + message
+	} else {
+		return serviceName + "::" + operationID + "::" + message
+	}
 }
