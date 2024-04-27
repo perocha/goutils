@@ -24,6 +24,7 @@ type XTelemetryObjectImpl struct {
 	serviceName string
 }
 
+// Initialize the telemetry object
 func NewXTelemetry(cc XTelemetryConfig) (*XTelemetryObjectImpl, error) {
 	if cc.GetInstrumentationKey() == "" {
 		return nil, errors.New("app insights instrumentation key not initialized")
@@ -82,10 +83,12 @@ func NewXTelemetry(cc XTelemetryConfig) (*XTelemetryObjectImpl, error) {
 	}, nil
 }
 
+// Debug will log the message using xTelemetry (no trace to App Insights)
 func (t *XTelemetryObjectImpl) Debug(ctx context.Context, message string, fields ...XField) {
 	t.logger.Debug(message, convertFields(fields)...)
 }
 
+// Info will log the message using xTelemetry and also send a trace to App Insights
 func (t *XTelemetryObjectImpl) Info(ctx context.Context, message string, fields ...XField) {
 	// Get the operation ID from the context
 	operationID, ok := ctx.Value("OperationID").(string)
@@ -116,10 +119,13 @@ func (t *XTelemetryObjectImpl) Info(ctx context.Context, message string, fields 
 	t.appinsights.Track(trace)
 }
 
+// Warn will log the message using xTelemetry and also send a trace to App Insights
+// TODO
 func (t *XTelemetryObjectImpl) Warn(ctx context.Context, message string, fields ...XField) {
 	t.logger.Warn(message, convertFields(fields)...)
 }
 
+// Error will log the message using xTelemetry and also send an exception to App Insights
 func (t *XTelemetryObjectImpl) Error(ctx context.Context, message string, fields ...XField) {
 	// Get the operation ID from the context
 	operationID, ok := ctx.Value("OperationID").(string)
@@ -151,6 +157,7 @@ func (t *XTelemetryObjectImpl) Error(ctx context.Context, message string, fields
 	t.appinsights.Track(exception)
 }
 
+// Convert the telemetry property fields to zap fields
 func convertFields(fields []XField) []zap.Field {
 	zapFields := make([]zap.Field, len(fields))
 	for i, field := range fields {
