@@ -16,14 +16,16 @@ type xConfig struct {
 	serviceName        string
 	logLevel           string
 	callerSkip         int
+	otlpEndPoint       string
 }
 
-func NewXTelemetryConfig(instrumentationKey string, serviceName string, logLevel string, callerSkip int) XTelemetryConfig {
+func NewXTelemetryConfig(instrumentationKey string, serviceName string, logLevel string, callerSkip int, otlpEndPoint string) XTelemetryConfig {
 	return &xConfig{
 		instrumentationKey: instrumentationKey,
 		serviceName:        serviceName,
 		logLevel:           logLevel,
 		callerSkip:         callerSkip,
+		otlpEndPoint:       otlpEndPoint,
 	}
 }
 

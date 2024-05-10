@@ -238,6 +238,7 @@ func (t *XTelemetryObjectImpl) Request(ctx context.Context, method string, url s
 		}
 		// Append the operation ID to the request properties
 		if operationID != "" {
+			request.Tags.Operation().SetId(operationID)
 			request.Properties[string(OperationIDKeyContextKey)] = operationID
 		}
 		// Add service name as a property
