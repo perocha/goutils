@@ -17,6 +17,7 @@ type XTelemetryObject interface {
 	Error(ctx context.Context, message string, fields ...XField)
 	Dependency(ctx context.Context, dependencyType string, target string, success bool, startTime time.Time, endTime time.Time, message string, fields ...XField)
 	Request(ctx context.Context, method string, url string, duration time.Duration, responseCode string, success bool, source string, message string, fields ...XField)
+	GetContextInfo(ctx context.Context, key string) string
 }
 
 // XTelemetryObjectImpl will store the logger, the app insights client and the service name
@@ -264,4 +265,13 @@ func constructTraceMessage(serviceName string, operationID string, message strin
 	} else {
 		return serviceName + "::" + operationID + "::" + message
 	}
+}
+
+// Get context info using a key
+func GetContextInfo(ctx context.Context, key string) string {
+	info, ok := ctx.Value(key).(string)
+	if !ok {
+		return ""
+	}
+	return info
 }
