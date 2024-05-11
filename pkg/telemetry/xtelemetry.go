@@ -17,7 +17,6 @@ type XTelemetryObject interface {
 	Error(ctx context.Context, message string, fields ...XField)
 	Dependency(ctx context.Context, dependencyType string, target string, success bool, startTime time.Time, endTime time.Time, message string, fields ...XField)
 	Request(ctx context.Context, method string, url string, duration time.Duration, responseCode string, success bool, source string, message string, fields ...XField)
-	GetContextInfo(ctx context.Context, key string) string
 }
 
 // XTelemetryObjectImpl will store the logger, the app insights client and the service name
@@ -102,7 +101,7 @@ func (t *XTelemetryObjectImpl) Info(ctx context.Context, message string, fields 
 
 	// Create the new log trace
 	telemFields := convertFields(fields)
-	telemFields = append(telemFields, zap.String(string(ServiceNameKey), t.xConfig.GetServiceName()))
+	telemFields = append(telemFields, zap.String(string(ServiceNameContextKey), t.xConfig.GetServiceName()))
 	if operationID != "" {
 		telemFields = append(telemFields, zap.String(string(OperationIDKeyContextKey), operationID))
 	}
@@ -122,7 +121,7 @@ func (t *XTelemetryObjectImpl) Info(ctx context.Context, message string, fields 
 			trace.Properties[string(OperationIDKeyContextKey)] = operationID
 		}
 		// Add service name as a property
-		trace.Properties[string(ServiceNameKey)] = t.xConfig.GetServiceName()
+		trace.Properties[string(ServiceNameContextKey)] = t.xConfig.GetServiceName()
 
 		// Send the trace to App Insights
 		t.appinsights.Track(trace)
@@ -145,7 +144,7 @@ func (t *XTelemetryObjectImpl) Error(ctx context.Context, message string, fields
 
 	// Create the new error trace
 	telemFields := convertFields(fields)
-	telemFields = append(telemFields, zap.String(string(ServiceNameKey), t.xConfig.GetServiceName()))
+	telemFields = append(telemFields, zap.String(string(ServiceNameContextKey), t.xConfig.GetServiceName()))
 	if operationID != "" {
 		telemFields = append(telemFields, zap.String(string(OperationIDKeyContextKey), operationID))
 	}
@@ -167,7 +166,7 @@ func (t *XTelemetryObjectImpl) Error(ctx context.Context, message string, fields
 			exception.Properties[string(OperationIDKeyContextKey)] = operationID
 		}
 		// Add service name as a property
-		exception.Properties[string(ServiceNameKey)] = t.xConfig.GetServiceName()
+		exception.Properties[string(ServiceNameContextKey)] = t.xConfig.GetServiceName()
 
 		t.appinsights.Track(exception)
 	}
@@ -183,7 +182,7 @@ func (t *XTelemetryObjectImpl) Dependency(ctx context.Context, dependencyType st
 
 	// Create an info trace
 	telemFields := convertFields(fields)
-	telemFields = append(telemFields, zap.String(string(ServiceNameKey), t.xConfig.GetServiceName()))
+	telemFields = append(telemFields, zap.String(string(ServiceNameContextKey), t.xConfig.GetServiceName()))
 	if operationID != "" {
 		telemFields = append(telemFields, zap.String(string(OperationIDKeyContextKey), operationID))
 	}
@@ -205,7 +204,7 @@ func (t *XTelemetryObjectImpl) Dependency(ctx context.Context, dependencyType st
 			dependency.Properties[string(OperationIDKeyContextKey)] = operationID
 		}
 		// Add service name as a property
-		dependency.Properties[string(ServiceNameKey)] = t.xConfig.GetServiceName()
+		dependency.Properties[string(ServiceNameContextKey)] = t.xConfig.GetServiceName()
 
 		t.appinsights.Track(dependency)
 	}
@@ -221,7 +220,7 @@ func (t *XTelemetryObjectImpl) Request(ctx context.Context, method string, url s
 
 	// Create an info trace
 	telemFields := convertFields(fields)
-	telemFields = append(telemFields, zap.String(string(ServiceNameKey), t.xConfig.GetServiceName()))
+	telemFields = append(telemFields, zap.String(string(ServiceNameContextKey), t.xConfig.GetServiceName()))
 	if operationID != "" {
 		telemFields = append(telemFields, zap.String(string(OperationIDKeyContextKey), operationID))
 	}
@@ -243,7 +242,7 @@ func (t *XTelemetryObjectImpl) Request(ctx context.Context, method string, url s
 			request.Properties[string(OperationIDKeyContextKey)] = operationID
 		}
 		// Add service name as a property
-		request.Properties[string(ServiceNameKey)] = t.xConfig.GetServiceName()
+		request.Properties[string(ServiceNameContextKey)] = t.xConfig.GetServiceName()
 
 		t.appinsights.Track(request)
 	}
@@ -265,13 +264,4 @@ func constructTraceMessage(serviceName string, operationID string, message strin
 	} else {
 		return serviceName + "::" + operationID + "::" + message
 	}
-}
-
-// Get context info using a key
-func (t *XTelemetryObjectImpl) GetContextInfo(ctx context.Context, key string) string {
-	info, ok := ctx.Value(key).(string)
-	if !ok {
-		return ""
-	}
-	return info
 }

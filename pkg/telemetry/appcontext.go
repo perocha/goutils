@@ -8,6 +8,7 @@ import (
 // OperationIDKey represents the key type for the operation ID in context
 type OperationIDKey string
 type TelemetryObj string
+type ServiceNameKey string
 
 const (
 	// OperationIDKeyContextKey is the key used to store the operation ID in context
@@ -17,7 +18,7 @@ const (
 	TelemetryContextKey TelemetryObj = "telemetry"
 
 	// Service name key
-	ServiceNameKey = "ServiceName"
+	ServiceNameContextKey ServiceNameKey = "ServiceName"
 )
 
 // Helper function to retrieve the telemetry client from the context
@@ -40,9 +41,24 @@ func GetOperationID(ctx context.Context) string {
 
 // Helper function to retrieve the service name from the context
 func GetServiceName(ctx context.Context) string {
-	serviceName, ok := ctx.Value(ServiceNameKey).(string)
+	serviceName, ok := ctx.Value(ServiceNameContextKey).(string)
 	if !ok {
 		log.Panic("Service name not found in context")
 	}
 	return serviceName
+}
+
+// Set the telemetry client in the context
+func SetXTelemetryClient(ctx context.Context, telemetryClient *XTelemetryObjectImpl) context.Context {
+	return context.WithValue(ctx, TelemetryContextKey, telemetryClient)
+}
+
+// Set the operation ID in the context
+func SetOperationID(ctx context.Context, operationID string) context.Context {
+	return context.WithValue(ctx, OperationIDKeyContextKey, operationID)
+}
+
+// Set the service name in the context
+func SetServiceName(ctx context.Context, serviceName string) context.Context {
+	return context.WithValue(ctx, ServiceNameContextKey, serviceName)
 }
