@@ -2,7 +2,6 @@ package telemetry
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/microsoft/ApplicationInsights-Go/appinsights"
@@ -231,6 +230,7 @@ func (t *XTelemetryObjectImpl) Request(ctx context.Context, method string, url s
 	if t.appinsights != nil {
 		// Create the new request
 		request := appinsights.NewRequestTelemetry(method, url, duration, responseCode)
+		request.Source = source
 		request.Success = success
 		// Add properties to the request
 		for _, field := range fields {
@@ -255,15 +255,6 @@ func convertFields(fields []XField) []zap.Field {
 		zapFields[i] = zap.Any(field.Key, field.Value)
 	}
 	return zapFields
-}
-
-// Helper function to retrieve the telemetry client from the context
-func GetXTelemetryClient(ctx context.Context) *XTelemetryObjectImpl {
-	telemetryClient, ok := ctx.Value(TelemetryContextKey).(*XTelemetryObjectImpl)
-	if !ok {
-		log.Panic("Telemetry client not found in context")
-	}
-	return telemetryClient
 }
 
 // Helper function to construct the trace message
