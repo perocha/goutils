@@ -268,7 +268,7 @@ func constructTraceMessage(serviceName string, operationID string, message strin
 }
 
 // Get context info using a key
-func GetContextInfo(ctx context.Context, key string) string {
+func (t *XTelemetryObjectImpl) GetContextInfo(ctx context.Context, key string) string {
 	info, ok := ctx.Value(key).(string)
 	if !ok {
 		return ""
