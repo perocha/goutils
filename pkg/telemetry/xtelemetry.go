@@ -211,7 +211,10 @@ func (t *XTelemetryObjectImpl) Dependency(ctx context.Context, dependencyType st
 }
 
 // Request will log the request using xTelemetry and also send a request to App Insights
-func (t *XTelemetryObjectImpl) Request(ctx context.Context, method string, url string, duration time.Duration, responseCode string, success bool, source string, message string, fields ...XField) {
+func (t *XTelemetryObjectImpl) Request(ctx context.Context, method string, url string, startTime time.Time, endTime time.Time, responseCode string, success bool, source string, message string, fields ...XField) {
+	// Calculate the duration
+	duration := endTime.Sub(startTime)
+
 	// Get the operation ID from the context
 	operationID, ok := ctx.Value(OperationIDKeyContextKey).(string)
 	if !ok {
@@ -230,6 +233,7 @@ func (t *XTelemetryObjectImpl) Request(ctx context.Context, method string, url s
 	if t.appinsights != nil {
 		// Create the new request
 		request := appinsights.NewRequestTelemetry(method, url, duration, responseCode)
+		request.MarkTime(startTime, endTime)
 		request.Source = source
 		request.Success = success
 		// Add properties to the request
